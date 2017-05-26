@@ -14,10 +14,12 @@ public:
     ~imageviwer();
 
     bool loadFile(const QString& fileName);
+    void showPicture(float scale);
 
 protected:
     void resizeEvent(QResizeEvent *);
     void paintEvent(QPaintEvent *);
+    void wheelEvent(QWheelEvent *);
 
 signals:
 
@@ -39,7 +41,7 @@ private:
 //    QString picName;
 
     int totate;
-//    int scale;
+    float scale;
 };
 
 #endif // IMAGEVIWER_H

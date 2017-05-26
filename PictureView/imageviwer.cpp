@@ -5,6 +5,8 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QPainter>
+#include <QWheelEvent>
+
 imageviwer::imageviwer(QWidget *parent) :
     QWidget(parent)
 {
@@ -22,9 +24,10 @@ imageviwer::imageviwer(QWidget *parent) :
     image_label->setBackgroundRole(QPalette::Base);
     image_label->setSizePolicy(QSizePolicy::Ignored,
                                QSizePolicy::Ignored);
-    image_label->setScaledContents(true);
+//    image_label->setScaledContents(true);
 
     totate = 0;
+    scale = 1;
 //    picName = "";
 
     main_layout = new QVBoxLayout(this);
@@ -65,7 +68,7 @@ imageviwer::imageviwer(QWidget *parent) :
     main_layout->addLayout(tool_layout);
 
     this->setLayout(main_layout);
-    this->setStyleSheet("background-color: rgb(160, 75, 59);");
+//    this->setStyleSheet("background-color: rgb(160, 75, 59);");
 
     connect(btn_prev, SIGNAL(clicked(bool)), this, SLOT(on_click_btn_prev()));
     connect(btn_next, SIGNAL(clicked(bool)), this, SLOT(on_click_btn_next()));
@@ -85,20 +88,20 @@ imageviwer::~imageviwer()
 bool imageviwer::loadFile(const QString& fileName)
 {
     QImageReader reader(fileName);
-//    picName = fileName;
     reader.setAutoDetectImageFormat(true);
     const QImage newImage = reader.read();
 
     setImage(newImage);
-    //qDebug() << "file name " <<fileName ;
-
     return true;
 }
 
 void imageviwer::setImage(const QImage& newImage)
 {
     image = newImage;
-    image_label->setPixmap(QPixmap::fromImage(image));
+    image_label->setPixmap(QPixmap::fromImage(image.scaled(
+                    image_label->width(),
+                    image_label->height(),
+                    Qt::KeepAspectRatio) ));
 }
 
 void imageviwer::paintEvent(QPaintEvent *)
@@ -118,6 +121,33 @@ void imageviwer::paintEvent(QPaintEvent *)
 //    }
 //    qDebug() <<picName << " rotate " << totate;
 
+}
+
+void imageviwer::showPicture(float scale)
+{
+    image_label->setPixmap(QPixmap::fromImage(image.scaled(
+                    image_label->width()*scale,
+                    image_label->height()*scale,
+                    Qt::KeepAspectRatio) ));
+}
+
+void imageviwer::wheelEvent(QWheelEvent *event)
+{
+    int wheelStep = event->delta();
+
+    wheelStep /= 10;
+
+    if(wheelStep > 0)
+        scale += 0.01;
+    else
+        scale -= 0.01;
+
+    if(scale <= 0.2)
+        scale = 0.2;
+    if(scale >= 5)
+        scale = 5;
+
+    showPicture(scale);
 }
 
 void imageviwer::resizeEvent(QResizeEvent *)
@@ -140,7 +170,9 @@ void imageviwer::on_click_btn_rotatel()
         totate = 0;
     leftmatrix.rotate(totate);
 
-    image_label->setPixmap(QPixmap("1.png").transformed(leftmatrix,Qt::SmoothTransformation));
+//    image_label->setPixmap(QPixmap("1.png").transformed(leftmatrix,Qt::SmoothTransformation));
+    QImage imgRotate = image.transformed(leftmatrix);
+    image_label->setPixmap(QPixmap::fromImage(imgRotate));
 }
 void imageviwer::on_click_btn_rotater()
 {
